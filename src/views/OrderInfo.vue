@@ -114,22 +114,6 @@
                 border-radius: 5px;
               "
             >
-              <!-- 隐藏主ID号 -->
-              <div
-                class="form-group form-inline"
-                style="margin-top: 10px"
-                v-show="isMainId"
-              >
-                <label for="companyName" style="margin-left: 5px">id：</label>
-                <input
-                  :value="mainData.id"
-                  type="text"
-                  class="form-control"
-                  style="margin-left: 5px; width: 454px"
-                  disabled="disabled"
-                />
-              </div>
-
               <div class="form-group form-inline" style="margin: 20px 0 16px">
                 <label for="companyName" style="margin-left: 10px"
                   >订单编号：</label
@@ -217,24 +201,6 @@
                     height: 60px;
                     resize: none;
                   "
-                />
-              </div>
-              <!-- 隐藏主表状态 -->
-              <div
-                class="form-group form-inline"
-                style="margin-top: 10px"
-                v-show="isMainId"
-              >
-                <label for="companyName" style="margin-left: 5px"
-                  >mainStatus：</label
-                >
-                <input
-                  v-model="mainStatus"
-                  type="text"
-                  class="form-control"
-                  id="mainStatus"
-                  style="margin-left: 5px; width: 454px"
-                  disabled="disabled"
                 />
               </div>
             </div>
@@ -405,16 +371,12 @@ export default {
       username: "",
       // 检测是否登录
       isLogin: false,
-      // 是否显示id
-      isMainId: false,
       // 主表数据
       mainData: {},
       // 是否展示增加数据区域
       dialog: false,
       // 是否展示删除数据区域
       dialogDelete: false,
-      // 主表id
-      code: "",
       // 单位选择
       options: ["KG", "LBS"],
       // 订单日期
@@ -423,8 +385,6 @@ export default {
       shipDate: "",
       // 备注
       notes: "",
-      // 主表状态
-      mainStatus: "",
       // 页面展示标题
       headers: [
         { text: "客布号", value: "cust_po", sortable: false },
@@ -638,7 +598,6 @@ export default {
           });
       } else {
         // 增加数据
-
         if (
           !this.editedItem.name ||
           !this.editedItem.qty ||
@@ -686,13 +645,14 @@ export default {
         methods: "GET",
         url: "http://wx.hengfeng-zl.cn/dingtalk/weborders.ashx",
         params: {
+          ctype: "getOrderCode",
           cust_id: 1124,
           record_by: this.username,
         },
       })
         .then((res) => {
-          var allMainData = res.data.data[0];
-          this.mainData = allMainData;
+          console.log("新增订单res==>", res);
+          this.mainData = res.data.data[0];
         })
         .catch((err) => {});
     },

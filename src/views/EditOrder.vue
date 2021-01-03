@@ -100,6 +100,7 @@
                   >订单编号：</label
                 >
                 <input
+                  :value="mainData.code"
                   type="text"
                   class="form-control"
                   id="code"
@@ -118,6 +119,7 @@
                     >订单日期：</label
                   >
                   <input
+                    :value="mainData.billdate"
                     type="text"
                     class="form-control"
                     id="orderDate"
@@ -132,6 +134,7 @@
                 <div class="form-group" style="margin-left: 20px" @click.stop>
                   <label for="shipDate">交货日期：</label>
                   <input
+                    :value="mainData.cust_shipDate"
                     type="text"
                     class="form-control"
                     id="shipDate"
@@ -145,6 +148,7 @@
                   >公司名称：</label
                 >
                 <input
+                  :value="mainData.cust_name"
                   type="text"
                   class="form-control"
                   id="companyName"
@@ -162,6 +166,7 @@
                   >备<span class="remark">注：</span></label
                 >
                 <textarea
+                  :value="mainData.notes"
                   type="text"
                   class="form-control form-note"
                   id="notes"
@@ -342,7 +347,7 @@ export default {
       dialog: false,
       // 是否展示删除数据区域
       dialogDelete: false,
-       // 单位选择
+      // 单位选择
       options: ["KG", "LBS"],
       // 订单日期
       orderDate: "",
@@ -389,6 +394,9 @@ export default {
         recode_by: "",
         status: "",
       },
+
+      // 主表信息
+      mainData: {},
     };
   },
   created() {
@@ -396,6 +404,10 @@ export default {
     if (localStorage.getItem("user")) {
       this.isLogin = true;
     }
+    // 获取查询参数
+    this.id = this.$route.query.id;
+    console.log(this.id);
+    this.getEditInfo(this.id);
   },
 
   computed: {
@@ -426,41 +438,71 @@ export default {
       localStorage.removeItem("user");
       this.$router.push({ name: "Login" });
     },
-    // 默认日期为今天
-    todayDate() {
-      var date = new Date();
-      var y = date.getFullYear();
-      var m = date.getMonth() + 1;
-      var d = date.getDate();
-      m = m < 10 ? "0" + m : m;
-      d = d < 10 ? "0" + d : d;
-      return y + "-" + m + "-" + d;
-    },
 
-    // 控制年月日时分选择
-    shipdate() {
-      var date = new Date();
-      var y = date.getFullYear();
-      var m = date.getMonth() + 1;
-      var d = date.getDate();
-      var h = date.getHours();
-      var min = date.getMinutes();
-      m = m < 10 ? "0" + m : m;
-      d = d < 10 ? "0" + d : d;
-      h = h < 10 ? "0" + h : h;
-      min = min < 10 ? "0" + min : min;
-      return y + "-" + m + "-" + d + " " + h + ":" + min;
-    },
+    // 获取编辑信息
+    getEditInfo(id) {
+      this.axios({
+        methods: "GET",
+        url: "http://wx.hengfeng-zl.cn/dingtalk/weborders.ashx",
+        params: {
+          ctype: "getOrderInfo",
+          orderId: id,
+        },
+      })
+        .then((res) => {
+          console.log("获取编辑信息res==>", res);
+          this.mainData = res.data.orderM[0];
+          console.log("this.mainData==>", this.mainData);
 
+          this.childData = res.data.orderD;
+          console.log("this.childData==>", this.childData);
+          for (var i = 0; i < this.childData.length; i++) {
+            this.desserts.push(this.childData[i]);
+          }
+        })
+        .catch((err) => {});
+    },
     // 重量禁止输入e，+，-
-    inputLimit(e){
+    inputLimit(e) {
       let key = e.key;
-      if(key === "e" || key === "E" || key === "+" || key === "-"){
+      if (key === "e" || key === "E" || key === "+" || key === "-") {
         e.returnValue = false;
         return false;
       }
       return true;
     },
+
+    //提交主表单
+    // changeCount: function () {
+    //   if (!this.mainData.code) {
+    //     return false;
+    //   } else {
+    //     var mainList = {
+    //       ctype: "orderM",
+    //     };
+    //     var newMainData = {
+    //       id: this.mainData.id,
+    //       code: this.mainData.code,
+    //       cust_id: 1124,
+    //       cust_name: this.mainData.cust_name,
+    //       cust_shipdate: this.shipDate,
+    //       notes: this.notes,
+    //       recode_by: this.username,
+    //       status: "update",
+    //     };
+    //     var key1 = "Data";
+    //     mainList[key1] = newMainData;
+
+    //     var subMainList = JSON.stringify(mainList);
+
+    //     this.axios
+    //       .post("http://wx.hengfeng-zl.cn/dingtalk/weborders.ashx", subMainList)
+    //       .then((res) => {
+    //         console.log("res==>", res);
+    //       })
+    //       .catch((err) => {});
+    //   }
+    // },
 
     // 编辑数据
     editItem(item) {
@@ -482,22 +524,23 @@ export default {
 
     // 删除确认
     deleteItemConfirm() {
-      // this.editedItem.id = this.editedIndex + 1;
-      // this.editedItem.fid = this.mainData.id;
-      // this.editedItem.recode_by = this.username;
-      // this.editedItem.status = "detele";
-      // var subList = {
-      //   ctype: "orderD",
-      // };
-      // var key2 = "Data";
-      // subList[key2] = this.editedItem;
-      // var subChildList = JSON.stringify(subList);
- 
-      // this.axios
-      //   .post("http://wx.hengfeng-zl.cn/dingtalk/weborders.ashx", subChildList)
-      //   .then( res => {})
-      //   .catch( err => {});
-        
+      this.editedItem.fid = this.mainData.id;
+      this.editedItem.recode_by = this.username;
+      this.editedItem.status = "delete";
+      var subList = {
+        ctype: "orderD",
+      };
+      var key2 = "Data";
+      subList[key2] = this.editedItem;
+      var subChildList = JSON.stringify(subList);
+
+      this.axios
+        .post("http://wx.hengfeng-zl.cn/dingtalk/weborders.ashx", subChildList)
+        .then((res) => {
+        })
+        .catch((err) => {});
+
+      // 删除相关的项
       this.desserts.splice(this.editedIndex, 1);
 
       this.closeDelete();
@@ -528,27 +571,9 @@ export default {
       // 修改数据
       if (this.editedIndex > -1) {
         Object.assign(this.desserts[this.editedIndex], this.editedItem);
-        // this.editedItem.id = this.editedIndex + 1;
-        // this.editedItem.fid = this.mainData.id;
-        // this.editedItem.recode_by = this.username;
-        // this.editedItem.status = "update";
-        // var subList = {
-        //   ctype: "orderD",
-        // };
-        // var key2 = "Data";
-        // subList[key2] = this.editedItem;
-        // var subChildList = JSON.stringify(subList);
-
-        // this.axios
-        // .post("http://wx.hengfeng-zl.cn/dingtalk/weborders.ashx", subChildList)
-        // .then( res => {})
-        // .catch( err => {});
-      } else {
-        // 增加数据
-        this.editedItem.id = this.desserts.length + 1;
         this.editedItem.fid = this.mainData.id;
         this.editedItem.recode_by = this.username;
-        this.editedItem.status = "insert";
+        this.editedItem.status = "update";
         var subList = {
           ctype: "orderD",
         };
@@ -557,58 +582,50 @@ export default {
         var subChildList = JSON.stringify(subList);
 
         this.axios
-        .post("http://wx.hengfeng-zl.cn/dingtalk/weborders.ashx", subChildList)
-        .then( res => {})
-        .catch( err => {});
+          .post(
+            "http://wx.hengfeng-zl.cn/dingtalk/weborders.ashx",
+            subChildList
+          )
+          .then((res) => {})
+          .catch((err) => {});
+      } else {
+        if (
+          !this.editedItem.name ||
+          !this.editedItem.qty ||
+          !this.editedItem.unit
+        ) {
+          return false;
+        } else {
+          this.editedItem.id = this.desserts.length + 1;
+          this.editedItem.fid = this.mainData.id;
+          this.editedItem.recode_by = this.username;
+          this.editedItem.status = "insert";
+          var subList = {
+            ctype: "orderD",
+          };
+          var key2 = "Data";
+          subList[key2] = this.editedItem;
+          var subChildList = JSON.stringify(subList);
 
-        this.desserts.push(this.editedItem);
+          this.axios
+            .post(
+              "http://wx.hengfeng-zl.cn/dingtalk/weborders.ashx",
+              subChildList
+            )
+            .then((res) => {
+              this.desserts.push(subList[key2]);
+
+              this.dataRow = res.data.row;
+
+              var saveIndex = this.desserts.indexOf(subList[key2]);
+
+              this.desserts[saveIndex].id = this.dataRow;
+            })
+            .catch((err) => {});
+        }
       }
       this.close();
     },
-
-    // 新增订单
-    newOrder() {
-      this.axios({
-        methods: "GET",
-        url: "http://api.kele8.cn/agent/http://wx.hengfeng-zl.cn/dingtalk/weborders.ashx",
-        params: {
-          cust_id: 1124,
-          record_by: this.username,
-        },
-      })
-        .then( res => {
-          var allMainData = res.data.data[0];
-          this.mainData = allMainData;
-        })
-        .catch( err => {});
-    },
-
-    //提交主表单
-    changeCount: function () {
-      var mainList = {
-        ctype: "orderM",
-      };
-      var newMainData = {
-        id: this.mainData.id,
-        code: this.mainData.code,
-        cust_id: 1124,
-        cust_name: this.mainData.cust_name,
-        cust_shipdate: this.shipDate,
-        notes: this.notes,
-        recode_by: this.username,
-        status: "update",
-      };
-      var key1 = "Data";
-      mainList[key1] = newMainData;
-
-      var subMainList = JSON.stringify(mainList);
-
-      this.axios
-        .post("http://wx.hengfeng-zl.cn/dingtalk/weborders.ashx", subMainList)
-        .then( res => {})
-        .catch( err => {});
-    },
-
   },
 };
 </script>
@@ -662,10 +679,10 @@ export default {
 ::v-deep .v-data-footer {
   display: none;
 }
-::v-deep .v-data-table > .v-data-table__wrapper > table > tbody > tr > td{
+::v-deep .v-data-table > .v-data-table__wrapper > table > tbody > tr > td {
   text-align: center !important;
 }
-::v-deep .v-expansion-panel-content:last-child{
+::v-deep .v-expansion-panel-content:last-child {
   margin-bottom: 50px !important;
 }
 </style>

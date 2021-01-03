@@ -19,7 +19,6 @@
       >
         <span class="navbar-toggler-icon"></span>
       </button>
-      <!--<input class="form-control form-control-dark w-auto" type="text" placeholder="Search" aria-label="Search">-->
       <ul class="navbar-nav px-3">
         <li class="nav-item text-nowrap" v-if="isLogin">
           <span style="color: aliceblue">欢迎，{{ username }}</span>
@@ -139,10 +138,8 @@
             </v-simple-table>
 
             <v-expansion-panels focusable popout>
-              <v-expansion-panel v-for="(item, i) in 5" :key="i">
+              <v-expansion-panel v-for="(item, i) in orderList" :key="i" @click="getDetailInfo(item)">
                 <v-expansion-panel-header
-                  v-for="item in desserts"
-                  :key="item.code"
                 >
                   <div
                     style="
@@ -152,28 +149,22 @@
                       font-size: 20px;
                     "
                   >
-                    {{ i + 1 }}
+                    {{ item.id }}
                   </div>
                   <div class="desserts">{{ item.code }}</div>
 
-                  <div class="desserts">{{ item.orderDate }}</div>
-                  <div class="desserts">{{ item.shipDate }}</div>
-                  <div class="desserts">{{ item.weight }}</div>
+                  <div class="desserts">{{ item.billdate }}</div>
+                  <div class="desserts">{{ item.cust_shipDate }}</div>
+                  <div class="desserts">{{ item.qty }}</div>
                   <div class="desserts">{{ item.unit }}</div>
-                  <v-icon small class="mr-2" color="#ff5252" title="编辑" @click="goEdit()">
+                  <v-icon small class="mr-2" color="#ff5252" title="编辑" @click.stop="goEdit(item.id)">
                     mdi-pencil
                   </v-icon>
                   <i class="fa fa-floppy-o" aria-hidden="true" title="确定"></i>
-                  <!-- <button type="button" class="btn btn-primary editor">
-                    编辑
-                  </button>
-                  <button type="button" class="btn btn-primary comfirm">
-                    确定
-                  </button> -->
                 </v-expansion-panel-header>
 
                 <v-expansion-panel-content>
-                  <table class="table table-borderless">
+                  <table class="table table-borderless" >
                     <thead>
                       <tr>
                         <th scope="col">客布号</th>
@@ -185,21 +176,13 @@
                       </tr>
                     </thead>
                     <tbody>
-                      <tr>
-                        <td>Mark</td>
-                        <td>Otto</td>
-                        <td>@mdo</td>
-                        <td>@mdo</td>
-                        <td>@mdo</td>
-                        <td>@mdo</td>
-                      </tr>
-                      <tr>
-                        <td>Jacob</td>
-                        <td>Thornton</td>
-                        <td>@fat</td>
-                        <td>@mdo</td>
-                        <td>@mdo</td>
-                        <td>@mdo</td>
+                      <tr v-for="(item, i) in orderChildList" :key="i">
+                        <td>{{item.cust_po}}</td>
+                        <td>{{item.name}}</td>
+                        <td>{{item.style_code}}</td>
+                        <td>{{item.color}}</td>
+                        <td>{{item.qty}}</td>
+                        <td>{{item.unit}}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -232,23 +215,21 @@ export default {
       username: "",
       // 检测是否登录
       isLogin: false,
-      desserts: [
-        {
-          code: "HOF2012134",
-          orderDate: "2020-12-25",
-          shipDate: "2020-12-26 14:00",
-          weight: 100.12,
-          unit: "LBS",
-        },
-      ],
+      // 订单列表数据
+      orderList: [],
+      // 明细表数据
+      orderChildList:[]
     };
   },
 
   created() {
     this.getUserInfo();
+    
     if (localStorage.getItem("user")) {
       this.isLogin = true;
     }
+
+    this.getOrderInfo();
   },
 
   methods: {
@@ -258,8 +239,8 @@ export default {
     },
 
     // 跳转至对应的编辑页面
-    goEdit(){
-      this.$router.push({name: 'EditOrder'});
+    goEdit(id){
+      this.$router.push({name: 'EditOrder', query: {id}});
     },
 
     // 获取用户信息
@@ -272,6 +253,38 @@ export default {
       localStorage.removeItem("user");
       this.$router.push({ name: "Login" });
     },
+
+    // 获取订单列表信息
+    getOrderInfo(){
+      this.axios({
+        methods: "GET",
+        url: "http://wx.hengfeng-zl.cn/dingtalk/weborders.ashx",
+        params: {
+          ctype: "getOrderList",
+          cust_id: 1124
+        }
+      }).then((res)=>{
+        this.orderList = res.data.data;
+      }).catch((err)=>{
+
+      })
+    },
+
+    // 获取详细信息
+    getDetailInfo(item){
+      this.axios({
+        methods: "GET",
+        url: "http://wx.hengfeng-zl.cn/dingtalk/weborders.ashx",
+        params: {
+          ctype: "getOrderInfo",
+          orderId: item.id
+        }
+      }).then((res)=>{
+        this.orderChildList = res.data.orderD;
+      }).catch((err)=>{
+
+      })
+    }
   },
 };
 </script>
